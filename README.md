@@ -1,12 +1,11 @@
 # WSOD
 Working on algorithms for Weakly Supervised Object Detection
 
-coco_data_prep.ipynb
-Prepare the training data and train the model with only image level labels
-Training and validation split is using COCO train2017 dataset (~70% train, ~30% val)
-Evaluate classification accuracy of trained model on COCO val2017 dataset
+# coco_data_prep.ipynb
+1) Prepare the training data and train the model with only image level labels. Training and validation split is using COCO train2017 dataset (~70% train, ~30% val).
+2) Evaluate classification accuracy of trained model on COCO val2017 dataset
 
-eval_performance.ipynb
+# eval_performance.ipynb
 Evaluate object localization performance on val2017 dataset using the following algorithms:
 1) Grad-CAM
 2) Grad-CAM++
