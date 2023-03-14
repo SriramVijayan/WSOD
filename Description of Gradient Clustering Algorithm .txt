@@ -1,0 +1,55 @@
+Description of Gradient Clustering Algorithm based on Grad-CAM++
+
+1. Forward image through model to get prediction score and prediction label.   
+
+2. Compute gradients of output with the predicted label w.r.t convolutional feature map of target layer. 
+   Computed gradients are of size C x W x H, where C is number of different feature maps.
+
+3. Using computed gradients, compute the weighting coefficients following the formula in the Grad-CAM++ paper.
+
+4. Peform a ReLU operation for the gradients in each of the C feature maps.
+
+5. Normalize the pixel-wise weighting coefficients by their sum over only positive gradient regions.
+
+6. Multiply the pixel-wise weighting coefficients with the corresponding ReLU-ed gradients in each of the C feature maps.
+   This will produce an output of C x W x H weighted gradients, 0 where the gradients are not positive.
+
+7. Sum the gradients across the pixels of each of the C feature maps.
+   This will produce an output of C weighted gradients.
+
+8. Multiply the weighted gradients with each feature map pixel wise and take ReLU of each gradient weighted feature map.
+
+9. Sum the C feature maps together to get the base Grad-CAM++ heatmap of size (W x H) 
+
+10. Cluster the C weighted gradients into n clusters using kmeans clustering algorithm.
+    The output will consist of n clusters, each containing a different number of weighted gradients.
+
+11. For each cluster of weighted gradients, multiply the weighted gradients with the feature maps of that cluster only pixel wise 
+   and apply a ReLU operation for each of the gradient weighted feature maps.
+
+   Assuming for example, there are 3 clusters with c1, c2 and c3 number of weighted gradients for each of the clusters, this will produce
+   3 different sets of gradient weighted feature maps of size:
+   
+   1) c1 x W x H
+   2) c2 x W x H
+   3) c3 x W x H
+   
+   where c1 + c2 + c3 = C   
+
+12. For each of the n feature map clusters, sum them across the total number of feature maps.
+    This will give an output of size n x W x H, these are the individual heatmaps for the different gradient clusters. 
+
+13. Now we have the individual gradient cluster heatmaps as well as the base Grad-CAM++ heatmap.
+
+14. Threshold the base Grad-CAM++ heatmap by 20% of max value and find the largest contour of the base Grad-CAM++ heatmap.
+
+15. For each of the n gradient cluster heatmaps:
+	Threshold the cluster heatmap by 10% of max value and find the largest contour.
+	If the contour overlaps the contour formed in the base Grad-CAM++ heatmap:
+		Merge the contours together to form a larger contour
+
+16. At the end of process 15, return the final merged contour.
+
+17. Obtain the bounding box based on the final merged contour.
+		
+
