@@ -6,20 +6,34 @@ Description of Gradient Clustering Algorithm based on Grad-CAM++
    Computed gradients are of size C x W x H, where C is number of different feature maps.
 
 3. Using computed gradients, compute the weighting coefficients following the formula in the Grad-CAM++ paper.
+   	gradNum = (gradients).^2
+	gradDen1 = (gradients).^3
+	gradDen2 = sum(convOutput,(1,2))
+	for each feature map in C channels:
+		gradDen2[n,:] = gradDen2[n] * gradDen1[n,:]
+	gradDen = 2*(gradNum) + gradDen2
+	weightCoeffs = gradNum / gradDen, where gradDen[gradDen == 0] = 1.0 to prevent division by zero error	
 
 4. Peform a ReLU operation for the gradients in each of the C feature maps.
+	gradReLU = reluOp(gradients * exp(prediction_score))
 
 5. Normalize the pixel-wise weighting coefficients by their sum over only positive gradient regions.
+	normWeightCoeffs = weightCoeffs / sum(weightCoeffs) for each feature map
+	normWeightCoeffs[gradReLU == 0] = 0 for each feature map
+	normWeightCoeffs = normWeightCoeffs / sum(normWeightCoeffs) for each feature map 
 
 6. Multiply the pixel-wise weighting coefficients with the corresponding ReLU-ed gradients in each of the C feature maps.
    This will produce an output of C x W x H weighted gradients, 0 where the gradients are not positive.
+	weightedGrads = gradReLU * normWeightCoeffs for each feature map
 
 7. Sum the gradients across the pixels of each of the C feature maps.
    This will produce an output of C weighted gradients.
+	sumWeightedGrads = sum(weightedGrads) for all pixels on each feature map
 
 8. Multiply the weighted gradients with each feature map pixel wise and take ReLU of each gradient weighted feature map.
 
 9. Sum the C feature maps together to get the base Grad-CAM++ heatmap of size (W x H) 
+   This forms the GradCAM++ base heatmap.
 
 10. Cluster the C weighted gradients into n clusters using kmeans clustering algorithm.
     The output will consist of n clusters, each containing a different number of weighted gradients.
